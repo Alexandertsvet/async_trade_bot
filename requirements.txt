@@ -1,0 +1,18 @@
+# Core Django
+Django==6.1.0
+
+# Async PostgreSQL (Psycopg 3 с C-расширениями)
+psycopg[c]==3.2.4
+
+# ClickHouse (Native TCP driver & Django ORM integration)
+clickhouse-driver==0.2.11
+django-clickhouse-backend==2.0.0
+
+# Daphne ASGI Server
+daphne==4.1.2
+# Environment variables management
+python-dotenv==1.0.1
+
+# formate
+ruff==0.16.6
+djhtml==3.0.11

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}ВХОД // TRADING{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-10 col-sm-8 col-md-6 col-lg-4">
+            <div class="card card-mono p-4 shadow-sm">
+                <h3 class="text-center fw-bold mb-4 tracking-wider">ВХОД В СИСТЕМУ</h3>
+
+                {% if form.errors %}
+                    <div class="border border-dark p-2 text-center small mb-3 bg-light fw-bold">
+                        НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ
+                    </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'user:login' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label small fw-bold text-uppercase">Имя пользователя:</label>
+                        <input type="text" name="username" autofocus maxlength="150" class="form-control rounded-0 border-dark border-2 text-center" required id="id_username">
+                    </div>
+                    <div class="mb-4">
+                        <label for="id_password" class="form-label small fw-bold text-uppercase">Пароль:</label>
+                        <input type="password" name="password" class="form-control rounded-0 border-dark border-2 text-center" required id="id_password">
+                    </div>
+                    <button type="submit" class="btn btn-outline-dark btn-mono w-100 fw-bold rounded-0 text-uppercase py-2">ВОЙТИ</button>
+                </form>
+
+                <div class="text-center mt-4 small border-top border-dark pt-3">
+                    <a href="{% url 'user:password_reset' %}" class="text-dark text-decoration-underline fw-bold">ЗАБЫЛИ ПАРОЛЬ?</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

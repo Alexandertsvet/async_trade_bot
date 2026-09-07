@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}РЕГИСТРАЦИЯ // TRADING{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-10 col-sm-8 col-md-6 col-lg-4">
+            <div class="card card-mono p-4 shadow-sm">
+                <h3 class="text-center fw-bold mb-4 tracking-wider text-uppercase">CREATE_ACCOUNT</h3>
+
+                {% if form.non_field_errors %}
+                    <div class="border border-dark p-2 text-center small mb-3 bg-light fw-bold text-uppercase">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'user:signup' %}">
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label small fw-bold text-uppercase">{{ field.label }}:</label>
+
+                        <!-- Рендерим инпут вручную с нашими жесткими классами -->
+                            <input type="{{ field.field.widget.input_type|default:'text' }}"
+                                   name="{{ field.html_name }}"
+                                   class="form-control rounded-0 border-dark border-2 text-center"
+                                   required
+                                   id="{{ field.id_for_label }}">
+
+                        <!-- Вывод ошибок для конкретного поля -->
+                            {% if field.errors %}
+                                <div class="text-start small fw-bold text-uppercase mt-1" style="font-size: 0.75rem;">
+                                    {% for error in field.errors %}
+                                        <span class="d-block">• {{ error|striptags }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                        <!-- Поясняющий текст (например, требования к паролю) -->
+                            {% if field.help_text %}
+                                <div class="form-text text-muted text-start" style="font-size: 0.7rem; line-height: 1.2;">
+                                    {{ field.help_text|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-outline-dark btn-mono w-100 fw-bold rounded-0 text-uppercase py-2 mt-2">Зарегистрироваться</button>
+                </form>
+
+                <div class="text-center mt-4 border-top border-dark pt-3 small">
+                    УЖЕ ЕСТЬ АККАУНТ? <a href="{% url 'user:login' %}" class="text-dark text-decoration-underline fw-bold">ВОЙТИ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,29 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    {% with request.resolver_match.view_name as view_name %}
+        <div class="container">
+            <div class="navbar-nav">
+                <a class="nav-link fw-bold fs-5 {% if view_name  == 'homepage:homepage' %}active{% endif %}" href="{%url 'homepage:homepage'%}">Trading</a>
+                {% if user.is_authenticated %}
+                    <a class="nav-link fw-bold fs-5" href="">СОЗДАТЬ АККАУНТ</a>
+                    <a class="nav-link fw-bold fs-5" href="">АККАУНТЫ</a>
+                {% endif %}
+
+            </div>
+            <div class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <a class="nav-link {% if view_name  == 'user:password_change' %}active{% endif %}" href="{%url 'user:password_change'%}">Изменить пароль</a>
+                    <a class="nav-link {% if view_name  == 'user:password_reset' %}active{% endif %}" href="{%url 'user:password_reset'%}">Восстановить пароль</a>
+                    <form method="post" action="{% url 'user:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link {% if view_name == 'user:logout' %}active{% endif %}" style="background: none; border: none; cursor: pointer;">
+                            Выйти
+                        </button>
+                    </form>
+                {% else %}
+                    <a class="nav-link {% if view_name  == 'user:login' %}active{% endif %}" href="{%url 'user:login'%}">Войти</a>
+                    <a class="nav-link {% if view_name  == 'user:signup' %}active{% endif %}" href="{%url 'user:signup' %}">Регистрация</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endwith %}
+</nav>

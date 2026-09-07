@@ -1,0 +1,19 @@
+[tool.ruff]
+line-length = 79
+target-version = "py311" # Укажите вашу версию Python
+
+[tool.ruff.lint]
+# ВСЕ настройки линтера теперь перенесены в эту секцию
+select = ["E", "F", "I", "W"]
+ignore = []
+
+exclude = [
+    ".env",
+    ".git",
+    ".venv",
+    "venv",
+    "migrations",
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
