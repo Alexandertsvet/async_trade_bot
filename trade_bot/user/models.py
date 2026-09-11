@@ -10,10 +10,14 @@ from user.constant import MAX_LENGHT_EMAIL, MAX_LENGHT_USERS
 
 
 class User(AbstractUser):
+    """
+    Модель пользователя для Django проекта.
+    """
     email = models.EmailField(
         verbose_name="e-mail",
         unique=True,
         max_length=MAX_LENGHT_EMAIL,
+        help_text="Адрес электронной почты пользователя.",
     )
     username = models.CharField(
         unique=True,
@@ -25,6 +29,7 @@ class User(AbstractUser):
                 message="«Нельзя использовать пробел и символы, кроме . @ + - _».",
             ),
         ],
+        help_text="Имя пользователя в системе, которое должно соответствовать регулярному выражению.",
     )
 
     class Meta:
@@ -32,6 +37,9 @@ class User(AbstractUser):
         verbose_name_plural = "Пользователи."
 
     def clean(self):
+        """
+        Метод для валидации данных пользователя при создании или обновлении.
+        """
         if not self.pk and User.objects.exists():
             raise ValidationError(
                 "В этой системе может существовать только один пользователь."
@@ -39,6 +47,9 @@ class User(AbstractUser):
         super().clean()
 
     async def aclean(self):
+        """
+        Асинхронный метод для валидации данных пользователя при создании или обновлении.
+        """
         # Используем асинхронный метод ORM — aexists()
         if not self.pk and await User.objects.aexists():
             raise ValidationError(
@@ -49,12 +60,21 @@ class User(AbstractUser):
         await sync_to_async(super().clean)()
 
     def save(self, *args, **kwargs):
+        """
+        Метод для сохранения пользователя с асинхронной валидацией.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     async def asave(self, *args, **kwargs):
+        """
+        Асинхронный метод для сохранения пользователя с асинхронной валидацией.
+        """
         await self.aclean()
         await super().asave(*args, **kwargs)
 
     def __str__(self):
+        """
+        Метод для получения строкового представления пользователя.
+        """
         return self.username

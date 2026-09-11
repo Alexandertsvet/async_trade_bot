@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "user.apps.UserConfig",
     "homepage.apps.HomepageConfig",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -135,6 +136,15 @@ DEFAULT_FROM_EMAIL = USERNAME_MAIL
 SERVER_EMAIL = USERNAME_MAIL
 
 AUTH_USER_MODEL = "user.User"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 
 """

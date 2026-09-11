@@ -60,5 +60,4 @@ urlpatterns = [
         ),
         name="password_change_done",
     ),
-    # path('user/', include('django.contrib.auth.urls')),
 ]
