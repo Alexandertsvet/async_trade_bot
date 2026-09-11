@@ -14,6 +14,11 @@ PASSWORD_MAIL = os.getenv("PASSWORD_MAIL")
 USERNAME_MAIL = os.getenv("USERNAME_MAIL")
 DEBUG = os.getenv("DEBUG")
 
+FIELD_ENCRYPTION_KEY = os.getenv('FIELD_ENCRYPTION_KEY').encode('utf-8')
+# Проверка безопасности (необязательно, но полезно при запуске)
+if not FIELD_ENCRYPTION_KEY:
+    raise ValueError("FIELD_ENCRYPTION_KEY отсутствует в переменной окружения!")
+
 
 ALLOWED_HOSTS = []
 
