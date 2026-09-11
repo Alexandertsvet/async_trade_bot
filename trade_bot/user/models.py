@@ -8,6 +8,9 @@ from django.db import models
 
 from user.constant import MAX_LENGHT_EMAIL, MAX_LENGHT_USERS
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class User(AbstractUser):
     """
@@ -42,7 +45,8 @@ class User(AbstractUser):
         """
         if not self.pk and User.objects.exists():
             raise ValidationError(
-                "В этой системе может существовать только один пользователь."
+                "В этой системе может существовать только один пользователь.",
+                logger.critical("Попытка добавить нового пользователя в систему.")
             )
         super().clean()
 
