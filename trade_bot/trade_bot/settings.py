@@ -228,7 +228,7 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG',  
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
@@ -245,7 +245,7 @@ LOGGING = {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/django_errors.log',
-            'maxBytes': 1024 * 1024 * 10, 
+            'maxBytes': 1024 * 1024 * 10,
             'backupCount': 10,
             'formatter': 'verbose',
             'encoding': 'utf-8',
@@ -254,7 +254,7 @@ LOGGING = {
     'loggers': {
         '': {
             'handlers': ['console', 'file_general', 'file_errors'],
-            'level': 'INFO', 
+            'level': 'INFO',
         },
         'django': {
             'handlers': ['console', 'file_general', 'file_errors'],
@@ -263,7 +263,7 @@ LOGGING = {
         },
         'django.db.backends': {
             'handlers': ['console'],
-            'level': 'DEBUG',  
+            'level': 'DEBUG',
             'propagate': False,
         },
     },

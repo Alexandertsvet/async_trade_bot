@@ -1,9 +1,9 @@
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from user.forms import UserCreatForm
 
 
-class UserFormTest(TestCase):
+class UserFormTest(TransactionTestCase):
     def test_form_fields(self):
         """
         Тестирование полей формы UserCreatForm.

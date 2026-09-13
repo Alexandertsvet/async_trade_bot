@@ -1,32 +1,15 @@
 # В Django 6.1 для асинхронности мы импортируем утилиту sync_to_async,
 # так как clean() пока не умеет быть async нативно
+import logging
+
 from asgiref.sync import sync_to_async
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 
-from user.constant import MAX_LENGTH_EMAIL, MAX_LENGTH_USERS 
-from django.conf import settings
-from t_tech.invest import (
-    OrderDirection as TTechDirection,
-    OrderDirection as TTechOrderDirection,
-    OrderExecutionReportStatus as TTechStatus,
-    OrderType as TTechOrderType,
-    PriceType as TTechPriceType,
-    TimeInForceType as TTechTimeInForceType,
-)
-from t_tech.invest.utils import quotation_to_decimal, money_to_decimal
-from t_tech.invest.schemas import (
-    MoneyValue,
-    Quotation,
-)
-import uuid
-import logging
-
+from user.constant import MAX_LENGTH_EMAIL, MAX_LENGTH_USERS
 from user.module_encrypted_field import CustomEncryptedCharField
-
-
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +91,14 @@ class TInvestAccount(models.Model):
     Токен с доступом к конкретному счету — токен
     для получения доступа только к одному конкретному счету пользователя.
     Уровень прав доступа (без права осуществлять переводы между счетами).
+    Необходимо в .env 
+    INVEST_TOKEN=ваш api key
+    FIELD_ENCRYPTION_KEY=
+    для генерации ключа (FIELD_ENCRYPTION_KEY) использовать команду
+    python3 manage.py generate_key
+    Пример вывода
+    MYwwSOQNqTzqk-XseEgYMQf0G8-9c6mlFC4Eq8aKC4k=
+    Ключь успешно создан!
     """
 
     user = models.ForeignKey(
@@ -117,7 +108,7 @@ class TInvestAccount(models.Model):
     )
     account_id = models.CharField(max_length=50, unique=True)
     access_token = CustomEncryptedCharField(
-        max_length=255,
+        max_length=512,
         help_text="api key токен с доступом к конкретному счету T инвестиции",
     )
     description = models.CharField(

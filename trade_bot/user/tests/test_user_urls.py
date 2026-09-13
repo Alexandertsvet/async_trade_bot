@@ -1,11 +1,11 @@
 from django.contrib.auth import views as auth_views
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import resolve, reverse
 
 from user import views
 
 
-class UserURLsTest(TestCase):
+class UserURLsTest(TransactionTestCase):
     def test_signup_url(self):
         """
         Тестирование URL-паттерна для регистрации пользователя.

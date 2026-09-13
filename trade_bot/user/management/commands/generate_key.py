@@ -1,6 +1,5 @@
-from django.core.management.base import BaseCommand
-from django.core.management.utils import get_random_secret_key
 from cryptography.fernet import Fernet
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
