@@ -14,10 +14,19 @@ from user.module_encrypted_field import CustomEncryptedCharField
 logger = logging.getLogger(__name__)
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+MAX_LENGTH_EMAIL = 254
+MAX_LENGTH_USERS = 150
+
+
 class User(AbstractUser):
     """
-    Модель пользователя для Django проекта.
+    Модель пользователя для Django проекта (Синглтон).
     """
+
     email = models.EmailField(
         verbose_name="e-mail",
         unique=True,
@@ -38,17 +47,17 @@ class User(AbstractUser):
     )
 
     class Meta:
-        verbose_name = "Пользователь."
-        verbose_name_plural = "Пользователи."
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
 
     def clean(self):
         """
         Метод для валидации данных пользователя при создании или обновлении.
         """
         if not self.pk and User.objects.exists():
+            logger.critical("Попытка добавить нового пользователя в систему.")
             raise ValidationError(
-                "В этой системе может существовать только один пользователь.",
-                logger.critical("Попытка добавить нового пользователя в систему.")
+                "В этой системе может существовать только один пользователь."
             )
         super().clean()
 
@@ -56,42 +65,58 @@ class User(AbstractUser):
         """
         Асинхронный метод для валидации данных пользователя при создании или обновлении.
         """
-        # Используем асинхронный метод ORM — aexists()
         if not self.pk and await User.objects.aexists():
+            logger.critical(
+                "Попытка добавить нового пользователя в систему (async)."
+            )
             raise ValidationError(
-                "В этой системе может существовать только один пользователь.",
-                logger.critical("Попытка добавить нового пользователя в систему.")
+                "В этой системе может существовать только один пользователь."
             )
 
-        # Запускаем базовый clean в безопасном для async потоке
         await sync_to_async(super().clean)()
 
     def save(self, *args, **kwargs):
         """
-        Метод для сохранения пользователя с асинхронной валидацией.
+        Метод для сохранения пользователя с полной синхронной валидацией.
         """
         self.full_clean()
         super().save(*args, **kwargs)
 
+    '''async def asave(self, *args, **kwargs):
+        """
+        Асинхронный метод для сохранения пользователя с полной асинхронной валидацией.
+        """
+        await self.afull_clean()
+        await super().asave(*args, **kwargs)'''
+
     async def asave(self, *args, **kwargs):
         """
-        Асинхронный метод для сохранения пользователя с асинхронной валидацией.
+        Асинхронный метод для сохранения пользователя с полной асинхронной валидацией.
         """
-        await self.aclean()
+        # Так как afull_clean() не существует, оборачиваем стандартный full_clean
+        # Это безопасно вызовет вашу цепочку проверок (включая aclean() и RegexValidator)
+        await sync_to_async(self.full_clean)()
+
+        # Вызываем нативный асинхронный метод сохранения Django 6.x
         await super().asave(*args, **kwargs)
 
     def __str__(self):
-        """
-        Метод для получения строкового представления пользователя.
-        """
         return self.username
+
+
+from t_tech.invest import (
+    AccessLevel as TTechAccessLevel,
+    AccountStatus as TTechAccountStatus,
+    AccountType as TTechAccountType,
+)
+
 
 class TInvestAccount(models.Model):
     """Реальные торговые аккаунты.
     Токен с доступом к конкретному счету — токен
     для получения доступа только к одному конкретному счету пользователя.
     Уровень прав доступа (без права осуществлять переводы между счетами).
-    Необходимо в .env 
+    Необходимо в .env
     INVEST_TOKEN=ваш api key
     FIELD_ENCRYPTION_KEY=
     для генерации ключа (FIELD_ENCRYPTION_KEY) использовать команду
@@ -100,6 +125,77 @@ class TInvestAccount(models.Model):
     MYwwSOQNqTzqk-XseEgYMQf0G8-9c6mlFC4Eq8aKC4k=
     Ключь успешно создан!
     """
+
+    class AccountType(models.IntegerChoices):
+        ACCOUNT_TYPE_UNSPECIFIED = (
+            TTechAccountType.ACCOUNT_TYPE_UNSPECIFIED.value,
+            "Тип аккаунта не определен.",
+        )
+        ACCOUNT_TYPE_TINKOFF = (
+            TTechAccountType.ACCOUNT_TYPE_TINKOFF.value,
+            "Брокерский счет Т-Инвестиций.",
+        )
+        ACCOUNT_TYPE_TINKOFF_IIS = (
+            TTechAccountType.ACCOUNT_TYPE_TINKOFF_IIS.value,
+            "ИИС.",
+        )
+        ACCOUNT_TYPE_INVEST_BOX = (
+            TTechAccountType.ACCOUNT_TYPE_INVEST_BOX.value,
+            "Инвесткопилка.",
+        )
+        ACCOUNT_TYPE_INVEST_FUND = (
+            TTechAccountType.ACCOUNT_TYPE_INVEST_FUND.value,
+            "Фонд денежного рынка.",
+        )
+        ACCOUNT_TYPE_DEBIT = (
+            TTechAccountType.ACCOUNT_TYPE_DEBIT.value,
+            "Дебетовый карточный счeт.",
+        )
+        ACCOUNT_TYPE_SAVING = (
+            TTechAccountType.ACCOUNT_TYPE_SAVING.value,
+            "Накопительный счeт.",
+        )
+        ACCOUNT_TYPE_DFA = (
+            TTechAccountType.ACCOUNT_TYPE_DFA.value,
+            "Смарт-счет.",
+        )
+
+    class AccountStatus(models.IntegerChoices):
+        ACCOUNT_STATUS_UNSPECIFIED = (
+            TTechAccountStatus.ACCOUNT_STATUS_UNSPECIFIED.value,
+            "Статус не определён (обычно ошибка запроса).",
+        )
+        ACCOUNT_STATUS_NEW = (
+            TTechAccountStatus.ACCOUNT_STATUS_NEW.value,
+            "Счёт находится в процессе открытия (заявка отправлена).",
+        )
+        ACCOUNT_STATUS_OPEN = (
+            TTechAccountStatus.ACCOUNT_STATUS_OPEN.value,
+            "Открытый и активный счет.",
+        )
+        ACCOUNT_STATUS_CLOSED = (
+            TTechAccountStatus.ACCOUNT_STATUS_CLOSED.value,
+            "Закрытый счет.",
+        )
+        # ACCOUNT_STATUS_ALL = (TTechAccountStatus.ACCOUNT_STATUS_ALL.value, "Все счета.")
+
+    class AccessLevel(models.IntegerChoices):
+        ACCOUNT_ACCESS_LEVEL_UNSPECIFIED = (
+            TTechAccessLevel.ACCOUNT_ACCESS_LEVEL_UNSPECIFIED.value,
+            "Уровень доступа не определен.",
+        )
+        ACCOUNT_ACCESS_LEVEL_FULL_ACCESS = (
+            TTechAccessLevel.ACCOUNT_ACCESS_LEVEL_FULL_ACCESS.value,
+            "Полный доступ к счету.",
+        )
+        ACCOUNT_ACCESS_LEVEL_READ_ONLY = (
+            TTechAccessLevel.ACCOUNT_ACCESS_LEVEL_READ_ONLY.value,
+            "Доступ с уровнем прав «только чтение».",
+        )
+        ACCOUNT_ACCESS_LEVEL_NO_ACCESS = (
+            TTechAccessLevel.ACCOUNT_ACCESS_LEVEL_NO_ACCESS.value,
+            "Доступа нет.",
+        )
 
     user = models.ForeignKey(
         "User",
@@ -114,8 +210,28 @@ class TInvestAccount(models.Model):
     description = models.CharField(
         max_length=255, blank=True, help_text="Краткое описание..."
     )
+    type = models.IntegerField(
+        choices=AccountType.choices, default=AccountType.ACCOUNT_TYPE_TINKOFF
+    )
+    status = models.IntegerField(
+        choices=AccountStatus.choices,
+        default=AccountStatus.ACCOUNT_STATUS_OPEN,
+    )
+    access_level = models.IntegerField(
+        choices=AccessLevel.choices,
+        default=AccessLevel.ACCOUNT_ACCESS_LEVEL_FULL_ACCESS,
+    )
+    opened_date = models.DateTimeField(blank=True, null=True)
+    closed_date = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "account_id"], name="unique_user_account_id"
+            )
+        ]
 
     def __str__(self):
         return f"Account: {self.account_id}"

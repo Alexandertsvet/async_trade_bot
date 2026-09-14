@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Игнорировать абсолютно все файлы миграций во всех приложениях
+**/migrations/*.py
+# Но разрешить Git видеть сам пакет (файл __init__.py), чтобы папка не терялась
+!**/migrations/__init__.py

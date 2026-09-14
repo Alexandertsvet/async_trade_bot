@@ -1,23 +1,29 @@
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
+ENV_FILE = BASE_DIR.parent / ".env" or BASE_DIR / ".env"
+if not ENV_FILE.is_file():
+    raise ImproperlyConfigured(
+        f"Критическая ошибка: Файл конфигурации {ENV_FILE} отсутствует! "
+        f"Создайте его на основе .env.example перед запуском проекта."
+    )
 SECRET_KEY = os.getenv("SECRET_KEY")
 PASSWORD_MAIL = os.getenv("PASSWORD_MAIL")
 USERNAME_MAIL = os.getenv("USERNAME_MAIL")
-DEBUG = os.getenv("DEBUG")
-
-FIELD_ENCRYPTION_KEY = os.getenv('FIELD_ENCRYPTION_KEY').encode('utf-8')
-# Проверка безопасности (необязательно, но полезно при запуске)
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
+FIELD_ENCRYPTION_KEY = os.getenv("FIELD_ENCRYPTION_KEY")
 if not FIELD_ENCRYPTION_KEY:
-    raise ValueError("FIELD_ENCRYPTION_KEY отсутствует в переменной окружения!")
+    raise ValueError(
+        "FIELD_ENCRYPTION_KEY отсутствует в переменной окружения!"
+    )
+FIELD_ENCRYPTION_KEY = FIELD_ENCRYPTION_KEY.encode("utf-8")
 
 
 ALLOWED_HOSTS = []
@@ -207,64 +213,64 @@ CLICKHOUSE_DATABASES = {
 
 DATABASE_ROUTERS = ['django_clickhouse_backend.routers.ClickHouseRouter']
 """
-LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR = BASE_DIR / "logs"
 LOGS_DIR.mkdir(exist_ok=True)
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': (
-                '[%(asctime)s] %(levelname)-8s [%(name)s:%(filename)s:%(lineno)d] '
-                '[Process:%(process)d Thread:%(thread)d] %(message)s'
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": (
+                "[%(asctime)s] %(levelname)-8s [%(name)s:%(filename)s:%(lineno)d] "
+                "[Process:%(process)d Thread:%(thread)d] %(message)s"
             ),
-            'datefmt': '%Y-%m-%d %H:%M:%S',
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
-        'simple': {
-            'format': '[%(asctime)s] %(levelname)-8s [%(module)s] %(message)s',
-            'datefmt': '%H:%M:%S',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-        'file_general': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/django_general.log',
-            'maxBytes': 1024 * 1024 * 5,
-            'backupCount': 5,
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
-        },
-        'file_errors': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/django_errors.log',
-            'maxBytes': 1024 * 1024 * 10,
-            'backupCount': 10,
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
+        "simple": {
+            "format": "[%(asctime)s] %(levelname)-8s [%(module)s] %(message)s",
+            "datefmt": "%H:%M:%S",
         },
     },
-    'loggers': {
-        '': {
-            'handlers': ['console', 'file_general', 'file_errors'],
-            'level': 'INFO',
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
         },
-        'django': {
-            'handlers': ['console', 'file_general', 'file_errors'],
-            'level': 'INFO',
-            'propagate': False,
+        "file_general": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "logs/django_general.log",
+            "maxBytes": 1024 * 1024 * 5,
+            "backupCount": 5,
+            "formatter": "verbose",
+            "encoding": "utf-8",
         },
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "file_errors": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "logs/django_errors.log",
+            "maxBytes": 1024 * 1024 * 10,
+            "backupCount": 10,
+            "formatter": "verbose",
+            "encoding": "utf-8",
+        },
+    },
+    "loggers": {
+        "": {
+            "handlers": ["console", "file_general", "file_errors"],
+            "level": "INFO",
+        },
+        "django": {
+            "handlers": ["console", "file_general", "file_errors"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
         },
     },
 }

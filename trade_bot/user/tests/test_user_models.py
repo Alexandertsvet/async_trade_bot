@@ -35,9 +35,12 @@ class UserModelTest(TransactionTestCase):
         """
         Тестирование валидации корректного имени пользователя.
         """
-        user = User(username="testuser", email="testuser@example.com", password="testpassword")
+        user = User(
+            username="testuser",
+            email="testuser@example.com",
+            password="testpassword",
+        )
         await sync_to_async(user.full_clean)()
-
 
 
 class AccountModelTest(TransactionTestCase):
@@ -55,11 +58,19 @@ class AccountModelTest(TransactionTestCase):
             description="Test Description",
         )
         fernet = Fernet(settings.FIELD_ENCRYPTION_KEY)
-        encrypted_token_1 = fernet.encrypt("test_access_token".encode('utf-8')).decode('utf-8')
-        encrypted_token_2 = fernet.encrypt("test_access_token".encode('utf-8')).decode('utf-8')
+        encrypted_token_1 = fernet.encrypt(
+            "test_access_token".encode("utf-8")
+        ).decode("utf-8")
+        encrypted_token_2 = fernet.encrypt(
+            "test_access_token".encode("utf-8")
+        ).decode("utf-8")
 
-        decrypted_token_1 = fernet.decrypt(encrypted_token_1.encode('utf-8')).decode('utf-8')
-        decrypted_token_2 = fernet.decrypt(encrypted_token_2.encode('utf-8')).decode('utf-8')
+        decrypted_token_1 = fernet.decrypt(
+            encrypted_token_1.encode("utf-8")
+        ).decode("utf-8")
+        decrypted_token_2 = fernet.decrypt(
+            encrypted_token_2.encode("utf-8")
+        ).decode("utf-8")
 
         self.assertNotEqual(decrypted_token_1, encrypted_token_1)
         self.assertNotEqual(decrypted_token_2, encrypted_token_2)
@@ -69,7 +80,8 @@ class AccountModelTest(TransactionTestCase):
         self.assertEqual(decrypted_token_1, decrypted_token_2)
         self.assertIsNotNone(account.created_at)
         self.assertIsNotNone(account.updated_at)
-        self.assertEqual(account.access_token,"test_access_token")
+        self.assertEqual(account.access_token, "test_access_token")
+
 
 class CustomEncryptedCharFieldTest(TransactionTestCase):
     def test_encryption_and_decryption(self):
@@ -77,7 +89,7 @@ class CustomEncryptedCharFieldTest(TransactionTestCase):
         Тестирование шифрования и дешифрования CustomEncryptedCharField.
         """
         field = CustomEncryptedCharField(max_length=512)
-        value = 'test_value'
+        value = "test_value"
         encrypted_value = field.get_prep_value(value)
         decrypted_value = field.from_db_value(encrypted_value, None, None)
         self.assertEqual(decrypted_value, value)
