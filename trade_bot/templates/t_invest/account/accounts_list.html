@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}СПИСОК АККАУНТОВ // TRADING{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 border-bottom border-dark pb-3">
+            <div class="text-center text-sm-start mb-3 mb-sm-0">
+                <h3 class="fw-bold tracking-wider text-uppercase mb-1">
+                    <i class="bi bi-wallet2 me-2"></i>TRADING_ACCOUNTS
+                </h3>
+                <span class="small fw-bold text-muted text-uppercase" style="font-size: 0.75rem;">СПИСОК ПОДКЛЮЧЕННЫХ РЕАЛЬНЫХ СЧЕТОВ Т-ИНВЕСТИЦИЙ</span>
+            </div>
+            <a href="{% url 'user:account_add' %}" class="btn btn-outline-dark btn-mono fw-bold rounded-0 text-uppercase py-2 px-3 small">
+                <i class="bi bi-plus-lg me-1"></i>ПОДКЛЮЧИТЬ ТОКЕН
+            </a>
+        </div>
+
+
+        {% if accounts %}
+            <div class="table-responsive border border-dark border-2 rounded-0">
+                <table class="table table-bordered table-hover align-middle mb-0 text-center rounded-0" style="border-collapse: collapse;">
+                    <thead class="table-dark text-uppercase small fw-bold tracking-wider">
+                        <tr class="border-bottom border-dark border-2">
+                            <th class="py-3 px-2">ID / НАЗВАНИЕ</th>
+                            <th class="py-3 px-2">ТИП СЧЕТА</th>
+                            <th class="py-3 px-2">ДОСТУП</th>
+                            <th class="py-3 px-2">СТАТУС</th>
+                            <th class="py-3 px-2">ДАТА ОТКРЫТИЯ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small fw-bold text-uppercase">
+                        {% for account in accounts %}
+                            <tr class="border-bottom border-dark">
+                                <td class="py-3 px-2">
+                                    <div class="fw-bold text-dark tracking-wide">
+                                        <i class="bi bi-hash text-muted me-1"></i>{{ account.account_id }}
+                                    </div>
+                                    <div class="text-muted mt-1" style="font-size: 0.7rem;">{{ account.description|default:"— БЕЗ ОПИСАНИЯ —" }}</div>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="px-2 py-1 border border-dark bg-light" style="font-size: 0.75rem;">
+                                        <i class="bi bi-bank me-1"></i>{{ account.get_type_display }}
+                                    </span>
+                                </td>
+                                <td class="text-muted align-middle" style="font-size: 0.75rem;">
+                                    <i class="bi bi-eye me-1"></i>{{ account.get_access_level_display }}
+                                </td>
+                                <td class="align-middle">
+                                    {% if account.status == 2 %} 
+                                        <span class="px-2 py-1 border border-dark bg-white text-dark fw-bolder" style="font-size: 0.75rem;">
+                                            <i class="bi bi-activity text-success me-1"></i>{{ account.get_status_display }}
+                                        </span>
+                                    {% else %}
+                                        <span class="px-2 py-1 border border-dark bg-light text-muted" style="font-size: 0.75rem;">
+                                            <i class="bi bi-lock-fill me-1"></i>{{ account.get_status_display }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted align-middle" style="font-size: 0.75rem;">
+                                    <i class="bi bi-calendar3 me-1"></i>{{ account.opened_date|date:"d.m.Y H:i"|default:"—" }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="border border-dark border-2 p-5 text-center bg-light rounded-0 my-4 shadow-sm">
+                <div class="mb-3 text-dark">
+                    <i class="bi bi-folder-x" style="font-size: 2.5rem;"></i>
+                </div>
+                <div class="mb-2 small fw-bold tracking-widest text-muted">NO_DATA</div>
+                <h5 class="fw-bold text-uppercase tracking-wider mb-2">НЕТ ПОДКЛЮЧЕННЫХ СЧЕТОВ</h5>
+                <p class="text-muted small text-uppercase mx-auto mb-4" style="max-width: 450px; font-size: 0.75rem; line-height: 1.4;">
+                    ДОБАВЬТЕ ВАШ API-ТОКЕН Т-ИНВЕСТИЦИЙ, ЧТОБЫ ИМПОРТИРОВАТЬ ДАННЫЕ О ВАШИХ БРОКЕРСКИХ СЧЕТАХ, ИИС И ИНВЕСТКОПИЛКАХ В СИСТЕМУ.
+                </p>
+                <a href="{% url 'user:account_add' %}" class="btn btn-outline-dark btn-mono fw-bold rounded-0 text-uppercase py-2 px-4">
+                    <i class="bi bi-key me-2"></i>ПОДКЛЮЧИТЬ ПЕРВЫЙ ТОКЕН
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

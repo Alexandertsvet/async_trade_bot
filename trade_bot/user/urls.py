@@ -1,7 +1,11 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
-from .views import SignUpView
+from user.views import (
+    AsyncTInvestAccountCreateView,
+    AsyncTInvestAccountListView,
+    SignUpView,
+)
 
 app_name = "user"
 
@@ -59,5 +63,13 @@ urlpatterns = [
             template_name="registration/password_change_done.html"
         ),
         name="password_change_done",
+    ),
+    path(
+        "accounts/", AsyncTInvestAccountListView.as_view(), name="account_list"
+    ),
+    path(
+        "accounts/add/",
+        AsyncTInvestAccountCreateView.as_view(),
+        name="account_add",
     ),
 ]

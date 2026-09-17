@@ -10,5 +10,5 @@ DEBUG=True or Fals
 PASSWORD_MAIL=SMTP-сервер Яндекс 360 / Яндекс Почты
 USERNAME_MAIL=email@yandex.ru
 INVEST_TOKEN=API_KEY_T_INVEST
-FIELD_ENCRYPTION_KEY=шифрования данных на уровне полей базы данных
+FIELD_ENCRYPTION_KEY=шифрование данных на уровне полей базы данных
 ```

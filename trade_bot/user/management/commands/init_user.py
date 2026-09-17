@@ -47,7 +47,7 @@ class Command(BaseCommand):
                 self.style.SUCCESS("Перейдите на следующий этап каманда:")
             )
             self.stdout.write(
-                self.style.MIGRATE_HEADING("python3 manage.py init_sistem")
+                self.style.MIGRATE_HEADING("python3 manage.py init_system")
             )
             return
 

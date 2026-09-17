@@ -2,7 +2,6 @@
 # так как clean() пока не умеет быть async нативно
 import logging
 
-from asgiref.sync import sync_to_async
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -12,14 +11,6 @@ from user.constant import MAX_LENGTH_EMAIL, MAX_LENGTH_USERS
 from user.module_encrypted_field import CustomEncryptedCharField
 
 logger = logging.getLogger(__name__)
-
-
-import logging
-
-logger = logging.getLogger(__name__)
-
-MAX_LENGTH_EMAIL = 254
-MAX_LENGTH_USERS = 150
 
 
 class User(AbstractUser):
@@ -52,7 +43,7 @@ class User(AbstractUser):
 
     def clean(self):
         """
-        Метод для валидации данных пользователя при создании или обновлении.
+        Синхронный метод валидации при создании или обновлении (например, в админке).
         """
         if not self.pk and User.objects.exists():
             logger.critical("Попытка добавить нового пользователя в систему.")
@@ -63,8 +54,10 @@ class User(AbstractUser):
 
     async def aclean(self):
         """
-        Асинхронный метод для валидации данных пользователя при создании или обновлении.
+        Родной асинхронный метод валидации для Django 5.x/6.x.
+        Вызывается автоматически внутри afull_clean().
         """
+        # Используем родной асинхронный менеджер .aexists()
         if not self.pk and await User.objects.aexists():
             logger.critical(
                 "Попытка добавить нового пользователя в систему (async)."
@@ -73,31 +66,23 @@ class User(AbstractUser):
                 "В этой системе может существовать только один пользователь."
             )
 
-        await sync_to_async(super().clean)()
+        # Вызываем асинхронный super().aclean(), который появился в новых Django
+        await super().aclean()
 
     def save(self, *args, **kwargs):
         """
-        Метод для сохранения пользователя с полной синхронной валидацией.
+        Синхронное сохранение (для синхронного контекста).
         """
         self.full_clean()
         super().save(*args, **kwargs)
 
-    '''async def asave(self, *args, **kwargs):
-        """
-        Асинхронный метод для сохранения пользователя с полной асинхронной валидацией.
-        """
-        await self.afull_clean()
-        await super().asave(*args, **kwargs)'''
-
     async def asave(self, *args, **kwargs):
         """
-        Асинхронный метод для сохранения пользователя с полной асинхронной валидацией.
+        Правильное асинхронное сохранение.
+        Использует встроенный afull_clean(), который под капотом вызовет наш aclean().
         """
-        # Так как afull_clean() не существует, оборачиваем стандартный full_clean
-        # Это безопасно вызовет вашу цепочку проверок (включая aclean() и RegexValidator)
-        await sync_to_async(self.full_clean)()
-
-        # Вызываем нативный асинхронный метод сохранения Django 6.x
+        # ВАЖНО: Никаких sync_to_async(full_clean). Используем нативный метод:
+        await self.afull_clean()
         await super().asave(*args, **kwargs)
 
     def __str__(self):

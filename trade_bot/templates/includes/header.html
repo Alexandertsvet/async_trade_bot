@@ -4,8 +4,8 @@
             <div class="navbar-nav">
                 <a class="nav-link fw-bold fs-5 {% if view_name  == 'homepage:homepage' %}active{% endif %}" href="{%url 'homepage:homepage'%}">Trading</a>
                 {% if user.is_authenticated %}
-                    <a class="nav-link fw-bold fs-5" href="">СОЗДАТЬ АККАУНТ</a>
-                    <a class="nav-link fw-bold fs-5" href="">АККАУНТЫ</a>
+                    <a class="nav-link fw-bold fs-5" href="{%url 'user:account_add'%}">СОЗДАТЬ АККАУНТ</a>
+                    <a class="nav-link fw-bold fs-5" href="{%url 'user:account_list'%}">АККАУНТЫ</a>
                 {% endif %}
 
             </div>
