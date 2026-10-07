@@ -39,7 +39,6 @@ def q_to_f(q: Quotation) -> float:
         return 0.0
     return q.units + q.nano / 1_000_000_000
 
-
 class Command(BaseCommand):
     """
     python3 manage.py t_get_data
