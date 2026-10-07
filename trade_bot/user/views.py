@@ -41,14 +41,11 @@ class AsyncTInvestAccountListView(View):
             "accounts": accounts,
             "user": user,
         }
-        messages.success(self.request, "Обновлен список ваших счетов!")
+        messages.success(self.request, "Список ваших счетов!")
         response = await sync_to_async(render)(
             request, self.template_name, context
         )
         return response
-
-
-logger = logging.getLogger(__name__)
 
 
 class AsyncTInvestAccountCreateView(View):

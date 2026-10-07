@@ -3,6 +3,7 @@ from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
+from data_keeper.clickhouse_module import ClickHouseProcessor
 
 load_dotenv()
 
@@ -18,12 +19,36 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 PASSWORD_MAIL = os.getenv("PASSWORD_MAIL")
 USERNAME_MAIL = os.getenv("USERNAME_MAIL")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
+# --- PostgreSQL ---
+PG_DB_NAME = os.getenv("PG_DB_NAME")
+PG_USER = os.getenv("PG_USER")
+PD_PASSWORD = os.getenv("PD_PASSWORD")
+PG_HOST = os.getenv("PG_HOST")
+PG_PORT = os.getenv("PG_PORT")
+# --- Clichouse ---
+CLICKHOUSE_HOST=os.getenv("CLICKHOUSE_HOST")
+CLICKHOUSE_PORT=os.getenv("CLICKHOUSE_PORT")
+CLICKHOUSE_USER=os.getenv("CLICKHOUSE_USER")
+CLICKHOUSE_PASSWORD=os.getenv("CLICKHOUSE_PASSWORD")
+# --- DOCKER ---
+IS_DOCKER = os.getenv("DOCKER_ENV", "False").lower() in ("true", "1", "t")
+
+if not all([PG_DB_NAME, PG_USER, PD_PASSWORD, PG_HOST, PG_PORT]):
+    raise ValueError(
+        "Отсутствуют необходимые переменные окружения для PostgreSQL!"
+    )
+if not all([CLICKHOUSE_HOST, CLICKHOUSE_PORT, CLICKHOUSE_USER, CLICKHOUSE_PASSWORD]):
+    raise ValueError(
+        "Отсутствуют необходимые переменные окружения для Clichouse!"
+    )
+
 FIELD_ENCRYPTION_KEY = os.getenv("FIELD_ENCRYPTION_KEY")
 if not FIELD_ENCRYPTION_KEY:
     raise ValueError(
         "FIELD_ENCRYPTION_KEY отсутствует в переменной окружения!"
     )
 FIELD_ENCRYPTION_KEY = FIELD_ENCRYPTION_KEY.encode("utf-8")
+INVEST_TOKEN = os.getenv("INVEST_TOKEN")
 
 
 ALLOWED_HOSTS = []
@@ -39,6 +64,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "user.apps.UserConfig",
     "homepage.apps.HomepageConfig",
+    "data_recipient.apps.DataRecipientConfig",
+    "data_keeper.apps.DataKeeperConfig",
+    "terminal.apps.TerminalConfig",
     "channels",
 ]
 
@@ -80,12 +108,19 @@ ASGI_APPLICATION = "trade_bot.asgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": PG_DB_NAME,
+        "USER": PG_USER,
+        "PASSWORD": PD_PASSWORD,
+        "HOST": PG_HOST,
+        "PORT": PG_PORT,
     }
 }
+if not IS_DOCKER:
+    DATABASES["default"]["HOST"] = "localhost"
 
 
 # Password validation
@@ -148,71 +183,60 @@ SERVER_EMAIL = USERNAME_MAIL
 
 AUTH_USER_MODEL = "user.User"
 
+
+
+if IS_DOCKER:
+    # 1. Настройки для Docker-контейнеров
+    REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+    CELERY_BROKER_URL = REDIS_URL
+    CELERY_RESULT_BACKEND = REDIS_URL
+else:
+    # 2. Локальная разработка без Docker (напрямую в хост-системе)
+    REDIS_URL = "redis://127.0.0.1:6379/0"
+    CELERY_BROKER_URL = "redis://127.0.0.1:6379/0" # Используем явный IP вместо localhost для asyncio
+    CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+
+print(f"//[SYSTEM_CHECK] ТЕКУЩИЙ АДРЕС REDIS: {REDIS_URL} (IS_DOCKER={IS_DOCKER})")
+
+# Конфигурация Django Channels (ИСПРАВЛЕНО)
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [
+                {
+                    "address": REDIS_URL,
+                    "socket_connect_timeout": 5,
+                    "socket_timeout": 30,
+                    "health_check_interval": 5,
+                    "retry_on_timeout": True,
+                }
+            ],
+            "capacity": 5000, 
+            "expiry": 10,
         },
     },
 }
 
-
-"""
-#1
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+# Общие настройки Celery
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Europe/Moscow"
+CELERY_BEAT_SCHEDULE = {
+    'flush_redis_to_clickhouse_job': {
+        'task': 'data_recipient.tasks.flush_redis_to_clickhouse',
+        'schedule': 10.0,
     },
-
-    'clickhouse': {
-        'ENGINE': 'clickhouse_backend.backend',
-        'NAME': os.environ.get('CH_NAME', 'default'),
-        'USER': os.environ.get('CH_USER', 'default'),
-        'PASSWORD': os.environ.get('CH_PASSWORD', ''),
-        'HOST': os.environ.get('CH_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('CH_PORT', '9000'), 
-        'OPTIONS': {
-            'settings': {
-                'async_insert': 1,            
-                'wait_for_async_insert': 0, 
-            }
-        }
-    }
-}
-#2
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'your_pg_db',
-        'USER': 'your_pg_user',
-        'PASSWORD': 'your_pg_password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-        'OPTIONS': {
-            'async_client': True, 
-        },
-    }
 }
 
-CLICKHOUSE_DATABASES = {
-    'default': {
-        'ENGINE': 'django_clickhouse_backend',
-        'NAME': 'your_ch_db',
-        'USER': 'default',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '9000', # Родной TCP порт ClickHouse
-    }
-}
+client_clickhouse = ClickHouseProcessor()
+print(f'//CLICHOUSE_DRIVER VERSION//{client_clickhouse.execute("SELECT version();")}')
 
-DATABASE_ROUTERS = ['django_clickhouse_backend.routers.ClickHouseRouter']
-"""
+
+
+
+
 LOGS_DIR = BASE_DIR / "logs"
 LOGS_DIR.mkdir(exist_ok=True)
 
@@ -268,7 +292,7 @@ LOGGING = {
             "propagate": False,
         },
         "django.db.backends": {
-            "handlers": ["console"],
+            "handlers": [], #"console"
             "level": "DEBUG",
             "propagate": False,
         },

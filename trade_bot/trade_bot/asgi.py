@@ -1,16 +1,28 @@
-"""
-ASGI config for trade_bot project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.1/howto/deployment/asgi/
-"""
-
 import os
-
 from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+from django.urls import re_path
 
+# 1. Установка переменных окружения Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "trade_bot.settings")
 
-application = get_asgi_application()
+# 2. Инициализация ASGI-приложения Django (должна происходить ДО импорта консьюмеров!)
+django_asgi_app = get_asgi_application()
+
+# 3. Импорт асинхронного потребителя
+from data_recipient.consumers import TradingTerminalConsumer
+
+# 4. Общая маршрутизация протоколов
+application = ProtocolTypeRouter({
+    # Стандартные HTTP запросы (Views, REST API)
+    "http": django_asgi_app,
+    
+    # Асинхронные WebSocket соединения
+    "websocket": AuthMiddlewareStack(
+        URLRouter([
+            # Регулярное выражение позволяет принимать любой тикер (SBER, GAZP, VTBR) динамически
+            re_path(r"^ws/trades/(?P<ticker_name>\w+)/$", TradingTerminalConsumer.as_asgi()),
+        ])
+    ),
+})

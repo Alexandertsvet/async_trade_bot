@@ -22,4 +22,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("register/", include("user.urls")),
     path("", include("homepage.urls")),
+    path("", include("terminal.urls")),
 ]

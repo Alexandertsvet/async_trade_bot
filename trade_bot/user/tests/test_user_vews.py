@@ -17,7 +17,6 @@ def urls():
         "login": reverse("user:login"),
     }
 
-
 @pytest.fixture
 def async_client():
     return AsyncClient()
@@ -47,15 +46,12 @@ class TestAsyncTInvestAccountListView:
         """
         Проверка: У пользователя без аккаунтов выводится строгий текст NO_DATA.
         """
-        # Безопасно создаем одного пользователя через sync_to_async,
-        # чтобы обойти SynchronousOnlyOperation внутри вашего кастомного User.save() -> full_clean()
         user = await sync_to_async(User.objects.create_user)(
             username="test_trader",
             email="trader@example.com",
             password="secure_password_123",
         )
 
-        # 🔥 ИСПОЛЬЗУЕМ ALOGIN ДЛЯ ASYNC_CLIENT (важно для Django 5.x/6.x)
         await async_client.alogin(
             username="test_trader", password="secure_password_123"
         )
@@ -72,15 +68,9 @@ class TestAsyncTInvestAccountListView:
         """
         Проверка: Отображаются только счета текущего пользователя в правильной сортировке.
         """
-        # Помним про синглтон-логику в вашей модели:
-        # в вашей системе может существовать только один пользователь,
-        # поэтому создавать other_user не нужно (метод clean() модели User выбросит ValidationError)
         user = await sync_to_async(User.objects.create_user)(
             username="test_trader", email="trader@example.com", password="pwd"
         )
-
-        # Создаем счета для этого единственного пользователя
-        # Оборачиваем в sync_to_async для стабильности транзакций sqlite в тестах
         await sync_to_async(TInvestAccount.objects.create)(
             user=user,
             account_id="ACC-11111",

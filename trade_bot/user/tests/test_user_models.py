@@ -12,6 +12,10 @@ from user.module_encrypted_field import CustomEncryptedCharField
 User = get_user_model()
 
 
+
+
+
+
 class UserModelTest(TransactionTestCase):
     @pytest.mark.asyncio
     async def test_unique_user(self):
