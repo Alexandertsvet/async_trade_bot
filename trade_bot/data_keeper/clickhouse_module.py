@@ -1,7 +1,9 @@
-import os
 import logging
+import os
+
 from clickhouse_driver import Client
 from dotenv import load_dotenv
+
 logger = logging.getLogger(__name__)
 load_dotenv()
 print("//CLICHOUSE DRIVER")
@@ -17,6 +19,7 @@ else:
     CLICKHOUSE_PORT = 9000
     CLICKHOUSE_USER = "default"
     CLICKHOUSE_PASSWORD = "default"
+
 
 class ClickHouseProcessor(Client):
     def __init__(self, host=CLICKHOUSE_HOST, port=CLICKHOUSE_PORT):
@@ -37,7 +40,7 @@ class ClickHouseProcessor(Client):
             logger.info(f"Таблица {table_name} успешно удалена.")
         except Exception as e:
             logger.exception(f"Ошибка при удалении таблицы {table_name}: {e}")
-            raise e  
+            raise e
 
     def truncate_table(self, db, table_name):
         "Очистка данных в таблице"
@@ -88,9 +91,13 @@ class ClickHouseProcessor(Client):
             create_db_query = f"CREATE DATABASE IF NOT EXISTS {db_name}"
             self.execute(create_db_query)
             self.execute(f"USE {db_name}")
-            logger.info(f"[ClickHouseProcessor]//База данных '{db_name}' успешно создана или уже существует.")
+            logger.info(
+                f"[ClickHouseProcessor]//База данных '{db_name}' успешно создана или уже существует."
+            )
         except Exception as e:
-            logger.error(f"[ClickHouseProcessor]//База данных '{db_name}' Ошибка при создании БД/таблицы: {e}.")
+            logger.error(
+                f"[ClickHouseProcessor]//База данных '{db_name}' Ошибка при создании БД/таблицы: {e}."
+            )
 
     def create_main_table(self):
         """
@@ -98,7 +105,8 @@ class ClickHouseProcessor(Client):
 
         """
 
-        schemes = ['''
+        schemes = [
+            """
         CREATE TABLE IF NOT EXISTS trade_db.candles
         (
             `figi` String,
@@ -120,8 +128,8 @@ class ClickHouseProcessor(Client):
         ENGINE = MergeTree()
         PARTITION BY toYYYYMMDD(time)
         ORDER BY (instrument_uid, interval, time);
-        ''',
-        '''
+        """,
+            """
         CREATE TABLE IF NOT EXISTS trade_db.orderbooks
         (
             `figi` String,
@@ -147,8 +155,8 @@ class ClickHouseProcessor(Client):
         ENGINE = MergeTree()
         PARTITION BY toYYYYMMDD(time) 
         ORDER BY (instrument_uid, time);
-        ''',
-        '''
+        """,
+            """
         CREATE TABLE IF NOT EXISTS trade_db.trades
         (
             `figi` String,
@@ -162,29 +170,23 @@ class ClickHouseProcessor(Client):
         ENGINE = MergeTree()
         PARTITION BY toYYYYMMDD(time)
         ORDER BY (instrument_uid, time);
-        ''',
+        """,
         ]
         for scheme in schemes:
             try:
                 self.execute(scheme)
-                logger.info(f"[ClickHouseProcessor]//База данных успешно создана или уже существует.")
+                logger.info(
+                    "[ClickHouseProcessor]//База данных успешно создана или уже существует."
+                )
             except Exception as e:
-                logger.error(f"[ClickHouseProcessor]//База данных Ошибка при создании БД/таблицы: {e}.")
+                logger.error(
+                    f"[ClickHouseProcessor]//База данных Ошибка при создании БД/таблицы: {e}."
+                )
 
 
-
-
-
-
-
-
-
-
-
-# создание базы данных 
+# создание базы данных
 def create_db(client, db_name, table_name):
     try:
-
         create_db_query = f"CREATE DATABASE IF NOT EXISTS {db_name}"
         client.execute(create_db_query)
 
@@ -211,8 +213,10 @@ def create_db(client, db_name, table_name):
         print(f"Ошибка при создании БД/таблицы: {e}")
         return False
     finally:
-        if 'client' in locals():
+        if "client" in locals():
             client.disconnect()
+
+
 """
 CREATE TABLE trade_db.candles
 (

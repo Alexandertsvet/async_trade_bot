@@ -1,9 +1,11 @@
-import orjson
 import logging
+
+import orjson
 from celery import shared_task
-from redis import Redis
-from django.conf import settings
 from data_keeper.clickhouse_module import ClickHouseProcessor
+from django.conf import settings
+from redis import Redis
+
 from data_recipient.functions import data_from_celery_to_clichouse
 
 logger = logging.getLogger(__name__)
@@ -12,7 +14,8 @@ logger = logging.getLogger(__name__)
 LOCK_KEY = "lock:flush_clickhouse"
 QUEUE_KEY = "clickhouse_queue"
 # На всякий случай увеличиваем до 2000, так как шаг стал реже (10с)
-BATCH_SIZE = 2000 
+BATCH_SIZE = 2000
+
 
 @shared_task(name="data_recipient.tasks.flush_redis_to_clickhouse")
 def flush_redis_to_clickhouse():
@@ -27,11 +30,13 @@ def flush_redis_to_clickhouse():
 
     # АТОМАРНАЯ БЛОКИРОВКА:
     # Защита на случай, если ClickHouse "задумается" дольше, чем на 10 секунд.
-    # ex=8 секунд гарантирует, что старая блокировка гарантированно истечет 
+    # ex=8 секунд гарантирует, что старая блокировка гарантированно истечет
     # до прихода следующего планового тика от Beat (через 10с).
     lock_acquired = redis_client.set(LOCK_KEY, "true", ex=8, nx=True)
     if not lock_acquired:
-        logger.info("[CH_FLUSH] Прошлый таск еще не завершен. Пропуск дубликата.")
+        logger.info(
+            "[CH_FLUSH] Прошлый таск еще не завершен. Пропуск дубликата."
+        )
         return "DUPLICATE_IGNORED"
 
     try:
@@ -51,8 +56,6 @@ def flush_redis_to_clickhouse():
 
         data_from_celery_to_clichouse(batch, client_clickhouse)
 
-
-        
         # Логируем работу воркера под фиксированным шагом Beat
         logger.info(
             f"[CH_FLUSH] [BEAT_MODE] // Обработано: {len(batch)} шт. "
@@ -61,5 +64,7 @@ def flush_redis_to_clickhouse():
         return f"PROCESSED_{len(batch)}_ITEMS"
 
     except Exception as e:
-        logger.error(f"[CH_FLUSH] [CRITICAL_ERROR] Сбой при сбросе данных: {e}")
+        logger.error(
+            f"[CH_FLUSH] [CRITICAL_ERROR] Сбой при сбросе данных: {e}"
+        )
         return "ERROR_OCCURRED"

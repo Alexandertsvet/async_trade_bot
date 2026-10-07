@@ -17,6 +17,7 @@ def urls():
         "login": reverse("user:login"),
     }
 
+
 @pytest.fixture
 def async_client():
     return AsyncClient()

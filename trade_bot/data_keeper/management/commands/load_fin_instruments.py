@@ -1,11 +1,11 @@
+from data_keeper.models import FinancialInstrument
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from t_tech.invest import Client, SecurityTradingStatus
 from t_tech.invest.services import InstrumentsService
 from t_tech.invest.utils import quotation_to_decimal
-
-from data_keeper.models import FinancialInstrument
 from trade_bot.settings import INVEST_TOKEN
+
 
 class Command(BaseCommand):
     """

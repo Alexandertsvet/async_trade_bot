@@ -1,9 +1,9 @@
 import os
 from pathlib import Path
 
+from data_keeper.clickhouse_module import ClickHouseProcessor
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
-from data_keeper.clickhouse_module import ClickHouseProcessor
 
 load_dotenv()
 
@@ -26,10 +26,10 @@ PD_PASSWORD = os.getenv("PD_PASSWORD")
 PG_HOST = os.getenv("PG_HOST")
 PG_PORT = os.getenv("PG_PORT")
 # --- Clichouse ---
-CLICKHOUSE_HOST=os.getenv("CLICKHOUSE_HOST")
-CLICKHOUSE_PORT=os.getenv("CLICKHOUSE_PORT")
-CLICKHOUSE_USER=os.getenv("CLICKHOUSE_USER")
-CLICKHOUSE_PASSWORD=os.getenv("CLICKHOUSE_PASSWORD")
+CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST")
+CLICKHOUSE_PORT = os.getenv("CLICKHOUSE_PORT")
+CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER")
+CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD")
 # --- DOCKER ---
 IS_DOCKER = os.getenv("DOCKER_ENV", "False").lower() in ("true", "1", "t")
 
@@ -37,7 +37,9 @@ if not all([PG_DB_NAME, PG_USER, PD_PASSWORD, PG_HOST, PG_PORT]):
     raise ValueError(
         "Отсутствуют необходимые переменные окружения для PostgreSQL!"
     )
-if not all([CLICKHOUSE_HOST, CLICKHOUSE_PORT, CLICKHOUSE_USER, CLICKHOUSE_PASSWORD]):
+if not all(
+    [CLICKHOUSE_HOST, CLICKHOUSE_PORT, CLICKHOUSE_USER, CLICKHOUSE_PASSWORD]
+):
     raise ValueError(
         "Отсутствуют необходимые переменные окружения для Clichouse!"
     )
@@ -184,7 +186,6 @@ SERVER_EMAIL = USERNAME_MAIL
 AUTH_USER_MODEL = "user.User"
 
 
-
 if IS_DOCKER:
     # 1. Настройки для Docker-контейнеров
     REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
@@ -193,10 +194,12 @@ if IS_DOCKER:
 else:
     # 2. Локальная разработка без Docker (напрямую в хост-системе)
     REDIS_URL = "redis://127.0.0.1:6379/0"
-    CELERY_BROKER_URL = "redis://127.0.0.1:6379/0" # Используем явный IP вместо localhost для asyncio
+    CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"  # Используем явный IP вместо localhost для asyncio
     CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 
-print(f"//[SYSTEM_CHECK] ТЕКУЩИЙ АДРЕС REDIS: {REDIS_URL} (IS_DOCKER={IS_DOCKER})")
+print(
+    f"//[SYSTEM_CHECK] ТЕКУЩИЙ АДРЕС REDIS: {REDIS_URL} (IS_DOCKER={IS_DOCKER})"
+)
 
 # Конфигурация Django Channels (ИСПРАВЛЕНО)
 CHANNEL_LAYERS = {
@@ -212,7 +215,7 @@ CHANNEL_LAYERS = {
                     "retry_on_timeout": True,
                 }
             ],
-            "capacity": 5000, 
+            "capacity": 5000,
             "expiry": 10,
         },
     },
@@ -224,17 +227,16 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Europe/Moscow"
 CELERY_BEAT_SCHEDULE = {
-    'flush_redis_to_clickhouse_job': {
-        'task': 'data_recipient.tasks.flush_redis_to_clickhouse',
-        'schedule': 10.0,
+    "flush_redis_to_clickhouse_job": {
+        "task": "data_recipient.tasks.flush_redis_to_clickhouse",
+        "schedule": 10.0,
     },
 }
 
 client_clickhouse = ClickHouseProcessor()
-print(f'//CLICHOUSE_DRIVER VERSION//{client_clickhouse.execute("SELECT version();")}')
-
-
-
+print(
+    f"//CLICHOUSE_DRIVER VERSION//{client_clickhouse.execute('SELECT version();')}"
+)
 
 
 LOGS_DIR = BASE_DIR / "logs"
@@ -292,7 +294,7 @@ LOGGING = {
             "propagate": False,
         },
         "django.db.backends": {
-            "handlers": [], #"console"
+            "handlers": [],  # "console"
             "level": "DEBUG",
             "propagate": False,
         },

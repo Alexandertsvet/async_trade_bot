@@ -1,6 +1,6 @@
+from asgiref.sync import sync_to_async
 from django.shortcuts import render
 from django.views.generic import View
-from asgiref.sync import sync_to_async
 
 
 class AsyncTerminalMain(View):

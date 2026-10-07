@@ -1,10 +1,10 @@
 import asyncio
+
+from data_keeper.models import FinancialInstrument
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from t_tech.invest import AsyncClient, SecurityTradingStatus
 from t_tech.invest.utils import quotation_to_decimal
-
-from data_keeper.models import FinancialInstrument
 from trade_bot.settings import INVEST_TOKEN
 
 
@@ -15,16 +15,18 @@ class Command(BaseCommand):
 
     help = "Модель финансового инструмента на основе данных T-Invest API."
 
-    async def fetch_category_instruments(self, client, method_name, current_time):
+    async def fetch_category_instruments(
+        self, client, method_name, current_time
+    ):
         """Асинхронно запрашивает инструменты одной категории и парсит их."""
         self.stdout.write(f"Запрос инструментов категории: {method_name}")
-        
+
         instruments_service = client.instruments
         api_method = getattr(instruments_service, method_name)
-        
+
         # Выполняем асинхронный сетевой запрос
         api_response = await api_method()
-        
+
         parsed_instruments = []
         for item in api_response.instruments:
             nano_val = getattr(item.min_price_increment, "nano", 0)
@@ -40,9 +42,13 @@ class Command(BaseCommand):
                 exchange=item.exchange,
                 currency=item.currency,
                 lot=item.lot,
-                min_price_increment=quotation_to_decimal(item.min_price_increment),
+                min_price_increment=quotation_to_decimal(
+                    item.min_price_increment
+                ),
                 scale=scale,
-                trading_status=str(SecurityTradingStatus(item.trading_status).name),
+                trading_status=str(
+                    SecurityTradingStatus(item.trading_status).name
+                ),
                 api_trade_available_flag=item.api_trade_available_flag,
                 buy_available_flag=item.buy_available_flag,
                 sell_available_flag=item.sell_available_flag,
@@ -52,7 +58,7 @@ class Command(BaseCommand):
                 updated_at=current_time,
             )
             parsed_instruments.append(instrument_obj)
-            
+
         return parsed_instruments
 
     async def _async_handle(self):
@@ -76,7 +82,9 @@ class Command(BaseCommand):
         instruments_data = [item for sublist in results for item in sublist]
 
         if not instruments_data:
-            self.stdout.write(self.style.WARNING("Данные для импорта отсутствуют."))
+            self.stdout.write(
+                self.style.WARNING("Данные для импорта отсутствуют.")
+            )
             return
 
         self.stdout.write(
@@ -84,10 +92,24 @@ class Command(BaseCommand):
         )
 
         fields_to_update = [
-            "figi", "ticker", "class_code", "name", "type", "exchange",
-            "currency", "lot", "min_price_increment", "scale", "trading_status",
-            "api_trade_available_flag", "buy_available_flag", "sell_available_flag",
-            "short_enabled_flag", "klong", "kshort", "updated_at",
+            "figi",
+            "ticker",
+            "class_code",
+            "name",
+            "type",
+            "exchange",
+            "currency",
+            "lot",
+            "min_price_increment",
+            "scale",
+            "trading_status",
+            "api_trade_available_flag",
+            "buy_available_flag",
+            "sell_available_flag",
+            "short_enabled_flag",
+            "klong",
+            "kshort",
+            "updated_at",
         ]
 
         await FinancialInstrument.objects.abulk_create(

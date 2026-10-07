@@ -1,6 +1,8 @@
-import os
 import logging
+import os
+
 from celery import Celery
+
 logger = logging.getLogger(__name__)
 # Устанавливаем настройки Django по умолчанию
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "trade_bot.settings")
